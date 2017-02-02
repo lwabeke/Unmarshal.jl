@@ -13,6 +13,8 @@
 
 ## Basic Usage
 
+This package has currently only been tested with unmarshalling of JSON objects, but the intention is to in future also test it for working on other data formats.
+
 ```julia
 import Unmarshal
 
