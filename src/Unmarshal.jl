@@ -2,14 +2,22 @@ module Unmarshal
 
 # package code goes here
 
-export unmarshal # returns a reconstrcuted variable from a JSON parsed string
+export unmarshal # returns a reconstructed variable from a JSON parsed string
 """
 Called with a given DataType and using the dictionary output of a JSON.parse , it will try to reconstruct the DataType from the JSON dictionary.
 
+    unmarshal(T, dict)
+
     unmarshal(typeof(var), JSON.parse(JSON.json(var)) == var
 """
-function unmarshal{T}(DT :: Type{Array{T}}, parsedJson)
-    #    @show "unmarshalArrayComposite"
+
+function unmarshal(DT :: DataType, parsedJson :: String) 
+#    @show "direct conversion from string"
+	DT(parsedJson)
+end
+
+function unmarshal{T}(DT :: Type{Array{T}}, parsedJson :: Array)
+#        @show "unmarshalArrayComposite"
 
     tmp = DT(length(parsedJson))
     for cnt=1:length(parsedJson)
@@ -19,12 +27,12 @@ function unmarshal{T}(DT :: Type{Array{T}}, parsedJson)
 end
 
 
-function unmarshal{T <: Number}(DT :: Type{Array{T}}, parsedJson)
+function unmarshal{T <: Number}(DT :: Type{Array{T}}, parsedJson :: Array)
 #    @show "unmarshalArrayNumber"
     map(T, parsedJson)
 end
 
-function unmarshal{T <: Number}(DT :: Type{Array{Complex{T}}}, parsedJson)
+function unmarshal{T <: Number}(DT :: Type{Array{Complex{T}}}, parsedJson :: Array)
 #        @show "unmarshalArrayComplex"
     tmp = DT(length(parsedJson))
     for cnt=1:length(parsedJson)
@@ -34,7 +42,7 @@ function unmarshal{T <: Number}(DT :: Type{Array{Complex{T}}}, parsedJson)
 end
 
 
-function unmarshal{T}(DT :: Type{Array{T, 2}}, parsedJson)
+function unmarshal{T}(DT :: Type{Array{T, 2}}, parsedJson :: Array)
 #    @show "unmarshalArray2"
 
     sizes = (length(parsedJson[1]), length(parsedJson) )
@@ -47,7 +55,7 @@ function unmarshal{T}(DT :: Type{Array{T, 2}}, parsedJson)
 end
 
 
-function unmarshal{T, N}(DT :: Type{Array{T, N}}, parsedJson)
+function unmarshal{T, N}(DT :: Type{Array{T, N}}, parsedJson :: Array)
 #    @show "unmarshalArrayN"
     if N == 1
         # This gets called if type was defined as Array{T,1}, instead of Array{T}
@@ -71,7 +79,7 @@ function unmarshal{T, N}(DT :: Type{Array{T, N}}, parsedJson)
 end
 
 
-function unmarshal(DT, parsedJson)
+function unmarshal(DT :: DataType, parsedJson :: Associative)
 #    @show "unmarshalStruct"
 
     tup = ()
