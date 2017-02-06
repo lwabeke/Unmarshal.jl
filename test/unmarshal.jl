@@ -28,7 +28,7 @@ end
 @test Unmarshal.unmarshal(Foo, JSON.parse(input)) === Foo(Bar(17))
 @test Unmarshal.unmarshal(Baz, JSON.parse(input)) === Baz(Nullable(3.14), Bar(17))
 @test Unmarshal.unmarshal(Qux, JSON.parse(input)) === Qux(Nullable{String}(),Bar(17))
-@test_throws ErrorException Unmarshal.unmarshal(Bar, JSON.parse(input)) 
+@test_throws ArgumentError Unmarshal.unmarshal(Bar, JSON.parse(input)) 
 
 #Test for structures of handling 1-D arrays
 type StructOfArrays
@@ -99,6 +99,6 @@ Unmarshal.unmarshal(reconfigurable{Float64}, JSON.parse(jstring))
 
 higher = higherlayer(val)
 jstring = JSON.json(higher)
-@test_throws ErrorException Unmarshal.unmarshal(higherlayer, JSON.parse(jstring))
+@test_throws ArgumentError Unmarshal.unmarshal(higherlayer, JSON.parse(jstring))
 
 @test Unmarshal.unmarshal(String, JSON.parse(json("Test"))) == "Test"
