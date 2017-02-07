@@ -48,7 +48,8 @@ Unmarshal.unmarshal(Array{Float64}, JSON.parse(jstring))
 ## Documentation
 
 ```julia
-Unmarshal.unmarshal(MyType, parseOutput )
+Unmarshal.unmarshal(MyType, parseOutput, verbose = false )
 ```
-Builds on object of type :MyType from the dictionary produced by JSON.parse
+Builds on object of type :MyType from the dictionary produced by JSON.parse. Set verbose to true to get debug information about the type hierarchy beging unmarshalled. This might be useful in tracking down mismatches between the JSON object and the Julia type definition.
+
 

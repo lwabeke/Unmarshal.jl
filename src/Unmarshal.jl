@@ -2,34 +2,75 @@ module Unmarshal
 
 # package code goes here
 
+# Helper function
+function prettyPrint(verboseLvl, str)
+    tabs = ""
+    for cntr=1:verboseLvl
+        tabs = tabs * "\t"
+    end
+    println("$(tabs)$(str)")    
+end
+
+
 export unmarshal # returns a reconstructed variable from a JSON parsed string
-"""
-Called with a given Type and using the dictionary output of a JSON.parse , it will try to reconstruct the Type from the JSON dictionary.
 
-    unmarshal(T, dict)
-
-    unmarshal(typeof(var), JSON.parse(JSON.json(var)) == var
 """
 
-function unmarshal(DT :: Type, parsedJson :: String) 
-#    @show "direct conversion from string"
+unmarshal(T, dict, verbose = false)
+
+Reconstructs an object of Type T using the dictionary output of a JSON.parse.
+
+Set verbose `true` to get debug information about how the data hierarchy is unmarshalled. This might be useful to track down parsing errors and/or mismatches between the JSON object and the Type definition.
+
+#Example
+
+```jldoctest
+julia> using JSON
+
+julia> var = randn(Float64, 5);  # Should work for most other variations of types you can think of
+
+julia> unmarshal(typeof(var), JSON.parse(JSON.json(var)) ) == var
+true
+```
+
+"""
+function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0) 
+    if (verbose)
+        prettyPrint(verboseLvl, "$(DT) (String)")
+        verboseLvl+=1
+    end
 	DT(parsedJson)
 end
 
-function unmarshal{E}(::Type{Vector{E}}, parsedJson::Vector)
-    E[unmarshal(E, x) for x in parsedJson]
+function unmarshal{E}(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0)
+    if (verbose)
+        prettyPrint(verboseLvl, "Vector{$E}")
+        verboseLvl+=1
+    end
+
+    E[unmarshal(E, x, verbose, verboseLvl) for x in parsedJson]
 end
-unmarshal{E}(::Type{Array{E}}, xs::Vector) = unmarshal(Vector{E}, xs)
 
-function unmarshal{E,N}(::Type{Array{E, N}}, parsedJson::Vector)
-    cat(N, (unmarshal(Array{E,N-1}, x) for x in parsedJson)...)
+unmarshal{E}(::Type{Array{E}}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) = unmarshal(Vector{E}, xs, verbose, verboseLvl)
+
+function unmarshal{E,N}(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0)
+    if (verbose)
+        prettyPrint(verboseLvl, "Array{$E, $N}")
+        verboseLvl+=1
+    end
+
+    cat(N, (unmarshal(Array{E,N-1}, x, verbose, verboseLvl) for x in parsedJson)...)
 end
 
 
-function unmarshal(DT :: Type, parsedJson :: Associative)
-#    @show "unmarshalStruct"
+function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = false, verboseLvl :: Int = 0)
+    if (verbose)
+            prettyPrint(verboseLvl, "$(DT) Associative")
+        verboseLvl+=1
+    end
+
     if !isleaftype(DT)
-        throw(ArgumentError("Cannot unmarshal a non-leaf type without a custom specialization"))
+        throw(ArgumentError("Cannot unmarshal a non-leaf type $(DT) without a custom specialization"))
     end
 
     tup = ()
@@ -47,7 +88,7 @@ function unmarshal(DT :: Type, parsedJson :: Associative)
                 rethrow(ex)
             end # try-cath
         else
-            val = unmarshal( DTNext, parsedJson[string(iter)])
+            val = unmarshal( DTNext, parsedJson[string(iter)], verbose, verboseLvl)
         end
             
         tup = (tup..., val)
@@ -56,11 +97,11 @@ function unmarshal(DT :: Type, parsedJson :: Associative)
     DT(tup...)
 end
 
-unmarshal{T<:Number}(::Type{T}, x::Number) = T(x)
-unmarshal{T}(::Type{Nullable{T}}, x) = Nullable(unmarshal(T, x))
-unmarshal{T}(::Type{Nullable{T}}, x::Void) = Nullable{T}()
+unmarshal{T<:Number}(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) = T(x)
+unmarshal{T}(::Type{Nullable{T}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) = Nullable(unmarshal(T, x))
+unmarshal{T}(::Type{Nullable{T}}, x::Void, verbose :: Bool = false, verboseLvl :: Int = 0) = Nullable{T}()
 
-unmarshal(T::Type, x) =
+unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
     throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
 
 end # module
