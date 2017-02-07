@@ -54,7 +54,6 @@ function ==(A :: StructOfArrays2D, B :: StructOfArrays2D)
     A.a3 == B.a3 && A.a4 == B.a4
 end
 
-
 tmp2 = StructOfArrays2D(ones(Float64, 2, 3), eye(Int, 2, 3))
 jstring = JSON.json(tmp2)
 @test Unmarshal.unmarshal(StructOfArrays2D, JSON.parse(jstring))  == tmp2
@@ -89,16 +88,32 @@ type reconfigurable{T}
     z :: Int
 end
 
+function =={T1, T2}(A :: reconfigurable{T1}, B :: reconfigurable{T2})
+    T1 == T2 && A.x == B.x && A.y == B.y && A.z == B.z
+end
+
+
 type higherlayer
     val :: reconfigurable
 end
 
 val = reconfigurable(1.0, 2.0, 3)
 jstring = JSON.json(val)
-Unmarshal.unmarshal(reconfigurable{Float64}, JSON.parse(jstring))
+@test Unmarshal.unmarshal(reconfigurable{Float64}, JSON.parse(jstring)) == reconfigurable{Float64}(1.0, 2.0, 3)
 
 higher = higherlayer(val)
 jstring = JSON.json(higher)
 @test_throws ArgumentError Unmarshal.unmarshal(higherlayer, JSON.parse(jstring))
 
+# Test string pass through
 @test Unmarshal.unmarshal(String, JSON.parse(json("Test"))) == "Test"
+
+# Test the verbose option
+@test Unmarshal.unmarshal(Foo, JSON.parse(input), true) === Foo(Bar(17))
+jstring = JSON.json(tmp3)
+@test Unmarshal.unmarshal(Array{Float64, 3}, JSON.parse(jstring), true)  == tmp3
+
+@test Unmarshal.unmarshal(String, JSON.parse(json("Test")), true) == "Test"
+
+
+
