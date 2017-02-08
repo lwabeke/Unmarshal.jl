@@ -116,7 +116,7 @@ jstring = JSON.json(tmp3)
 @test Unmarshal.unmarshal(String, JSON.parse(json("Test")), true) == "Test"
 
 # Added test cases to attempt getting 100% code coverage
-@test unmarshal(Nullable{Int64}, Void()) == Nullable{Int64}()
+@test isequal(unmarshal(Nullable{Int64}, Void()), Nullable{Int64}())
 
 @test_throws ArgumentError unmarshal(Nullable{Int64}, ones(Float64, 1))
 
