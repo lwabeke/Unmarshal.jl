@@ -48,7 +48,7 @@ function unmarshal{E}(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = f
         verboseLvl+=1
     end
 
-    E[unmarshal(E, x, verbose, verboseLvl) for x in parsedJson]
+    [(unmarshal(E, field, verbose, verboseLvl) for field in parsedJson)...]
 end
 
 unmarshal{E}(::Type{Array{E}}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) = unmarshal(Vector{E}, xs, verbose, verboseLvl)
@@ -95,6 +95,15 @@ function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = fals
     end
 
     DT(tup...)
+end
+
+function unmarshal{T<:Tuple, N}(DT :: Type{T}, parsedJson :: Array{Any,N}, verbose :: Bool = false, verboseLvl :: Int = 0)
+    if (verbose)
+        prettyPrint(verboseLvl, "$(T) $(N) Dimensions, length $(length(parsedJson))")
+        verboseLvl += 1
+    end
+    
+    ((unmarshal(fieldtype(T,1), field, verbose, verboseLvl) for field in parsedJson)...)
 end
 
 unmarshal{T<:Number}(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) = T(x)
