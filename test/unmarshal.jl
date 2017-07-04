@@ -127,3 +127,4 @@ jstring = JSON.json(testTuples)
 @test Unmarshal.unmarshal(Tuple{Array{Float64}}, JSON.parse(jstring)) == (([testElement...] for testElement in testTuples)...)
 @test Unmarshal.unmarshal(Array{Tuple{Float64}}, JSON.parse(jstring)) == [testTuples...]
 @test Unmarshal.unmarshal(Array{Array{Float64}}, JSON.parse(jstring)) == [([testElement...] for testElement in testTuples)...]
+@test Unmarshal.unmarshal(Tuple{Tuple{Float64}}, JSON.parse(jstring), true) == testTuples
