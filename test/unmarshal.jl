@@ -120,4 +120,11 @@ jstring = JSON.json(tmp3)
 
 @test_throws ArgumentError unmarshal(Nullable{Int64}, ones(Float64, 1))
 
-
+# Test handling of Tuples
+testTuples = ((1.0, 2.0, 3.0, 4.0), (2.0, 3.0))
+jstring = JSON.json(testTuples)
+@test Unmarshal.unmarshal(Tuple{Tuple{Float64}}, JSON.parse(jstring)) == testTuples
+@test Unmarshal.unmarshal(Tuple{Array{Float64}}, JSON.parse(jstring)) == (([testElement...] for testElement in testTuples)...)
+@test Unmarshal.unmarshal(Array{Tuple{Float64}}, JSON.parse(jstring)) == [testTuples...]
+@test Unmarshal.unmarshal(Array{Array{Float64}}, JSON.parse(jstring)) == [([testElement...] for testElement in testTuples)...]
+@test Unmarshal.unmarshal(Tuple{Tuple{Float64}}, JSON.parse(jstring), true) == testTuples
