@@ -14,6 +14,7 @@ end
 
 export unmarshal # returns a reconstructed variable from a JSON parsed string
 
+using JSON
 """
 
 unmarshal(T, dict, verbose = false)
@@ -106,6 +107,18 @@ function unmarshal{T<:Tuple, N}(DT :: Type{T}, parsedJson :: Array{Any,N}, verbo
     ((unmarshal(fieldtype(T,1), field, verbose, verboseLvl) for field in parsedJson)...)
 end
 
+function unmarshal{T<:Dict}(DT :: Type{T}, parsedJson :: Associative, verbose :: Bool = false, verboseLvl :: Int = 0)
+    if (verbose)
+        prettyPrint(verboseLvl, "$(DT) Dict ")
+        verboseLvl += 1
+    end
+    val = DT()
+    for iter in keys(parsedJson)
+        val[unmarshal(keytype(DT),JSON.parse(iter),verbose, verboseLvl)] = unmarshal(valtype(DT), parsedJson[iter], verbose, verboseLvl)
+    end
+    val
+end
+
 unmarshal{T<:Number}(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) = T(x)
 unmarshal{T}(::Type{Nullable{T}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) = Nullable(unmarshal(T, x))
 unmarshal{T}(::Type{Nullable{T}}, x::Void, verbose :: Bool = false, verboseLvl :: Int = 0) = Nullable{T}()
@@ -114,3 +127,4 @@ unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
     throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
 
 end # module
+
