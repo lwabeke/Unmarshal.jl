@@ -104,7 +104,7 @@ function unmarshal(DT :: Type{T}, parsedJson :: Array{Any,N}, verbose :: Bool = 
         verboseLvl += 1
     end
     
-    ((unmarshal(fieldtype(T,1), field, verbose, verboseLvl) for field in parsedJson)...)
+    ((unmarshal(fieldtype(T,1), field, verbose, verboseLvl) for field in parsedJson)...,)
 end
 
 function unmarshal(DT :: Type{T}, parsedJson :: Associative, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Dict
