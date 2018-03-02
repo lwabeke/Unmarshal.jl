@@ -128,3 +128,32 @@ jstring = JSON.json(testTuples)
 @test Unmarshal.unmarshal(Array{Tuple{Float64}}, JSON.parse(jstring)) == [testTuples...]
 @test Unmarshal.unmarshal(Array{Array{Float64}}, JSON.parse(jstring)) == [([testElement...] for testElement in testTuples)...]
 @test Unmarshal.unmarshal(Tuple{Tuple{Float64}}, JSON.parse(jstring), true) == testTuples
+
+
+mutable struct DictTest
+testDict::Dict{Int, String}
+end
+
+function ==(D1 :: DictTest, D2 :: DictTest)
+    for iter in keys(D1.testDict)
+        if !(D1.testDict[iter] == D2.testDict[iter])
+          return false
+        end
+    end
+    for iter in keys(D2.testDict)
+        if !(D1.testDict[iter] == D2.testDict[iter])
+          return false
+        end
+    end
+
+    true
+end
+
+dictTest = DictTest(Dict{Int, String}(1 => "Test1", 2 => "Test2"))
+
+#@show JSON.json(dictTest)
+#@show JSON.parse(JSON.json(dictTest))
+@test Unmarshal.unmarshal(DictTest, JSON.parse(JSON.json(dictTest)),true) == dictTest
+
+
+
