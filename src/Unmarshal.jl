@@ -43,7 +43,7 @@ function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, ve
 	DT(parsedJson)
 end
 
-function unmarshal{E}(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0)
+function unmarshal(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E
     if (verbose)
         prettyPrint(verboseLvl, "Vector{$E}")
         verboseLvl+=1
@@ -52,9 +52,9 @@ function unmarshal{E}(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = f
     [(unmarshal(E, field, verbose, verboseLvl) for field in parsedJson)...]
 end
 
-unmarshal{E}(::Type{Array{E}}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) = unmarshal(Vector{E}, xs, verbose, verboseLvl)
+unmarshal(::Type{Array{E}}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E = unmarshal(Vector{E}, xs, verbose, verboseLvl)
 
-function unmarshal{E,N}(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0)
+function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where {E, N}
     if (verbose)
         prettyPrint(verboseLvl, "Array{$E, $N}")
         verboseLvl+=1
@@ -98,7 +98,7 @@ function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = fals
     DT(tup...)
 end
 
-function unmarshal{T<:Tuple, N}(DT :: Type{T}, parsedJson :: Array{Any,N}, verbose :: Bool = false, verboseLvl :: Int = 0)
+function unmarshal(DT :: Type{T}, parsedJson :: Array{Any,N}, verbose :: Bool = false, verboseLvl :: Int = 0) where {T<:Tuple, N}
     if (verbose)
         prettyPrint(verboseLvl, "$(T) $(N) Dimensions, length $(length(parsedJson))")
         verboseLvl += 1
@@ -107,7 +107,7 @@ function unmarshal{T<:Tuple, N}(DT :: Type{T}, parsedJson :: Array{Any,N}, verbo
     ((unmarshal(fieldtype(T,1), field, verbose, verboseLvl) for field in parsedJson)...)
 end
 
-function unmarshal{T<:Dict}(DT :: Type{T}, parsedJson :: Associative, verbose :: Bool = false, verboseLvl :: Int = 0)
+function unmarshal(DT :: Type{T}, parsedJson :: Associative, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Dict
     if (verbose)
         prettyPrint(verboseLvl, "$(DT) Dict ")
         verboseLvl += 1
@@ -119,9 +119,9 @@ function unmarshal{T<:Dict}(DT :: Type{T}, parsedJson :: Associative, verbose ::
     val
 end
 
-unmarshal{T<:Number}(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) = T(x)
-unmarshal{T}(::Type{Nullable{T}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) = Nullable(unmarshal(T, x))
-unmarshal{T}(::Type{Nullable{T}}, x::Void, verbose :: Bool = false, verboseLvl :: Int = 0) = Nullable{T}()
+unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T<:Number = T(x) 
+unmarshal(::Type{Nullable{T}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable(unmarshal(T, x))
+unmarshal(::Type{Nullable{T}}, x::Void, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable{T}()
 
 unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
     throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
