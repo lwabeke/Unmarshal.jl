@@ -8,7 +8,7 @@ function prettyPrint(verboseLvl, str)
     for cntr=1:verboseLvl
         tabs = tabs * "\t"
     end
-    println("$(tabs)$(str)")    
+    println("$(tabs)$(str)")
 end
 
 
@@ -35,12 +35,12 @@ true
 ```
 
 """
-function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0) 
+function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0)
     if (verbose)
         prettyPrint(verboseLvl, "$(DT) (String)")
         verboseLvl+=1
     end
-	DT(parsedJson)
+    DT(parsedJson)
 end
 
 function unmarshal(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E
@@ -77,7 +77,7 @@ function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = fals
     tup = ()
     for iter in fieldnames(DT)
         DTNext = fieldtype(DT,iter)
-#        @show iter, DTNext, !haskey(parsedJson, string(iter)) 
+#        @show iter, DTNext, !haskey(parsedJson, string(iter))
 
         if !haskey(parsedJson, string(iter)) 
             try
@@ -91,7 +91,7 @@ function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = fals
         else
             val = unmarshal( DTNext, parsedJson[string(iter)], verbose, verboseLvl)
         end
-            
+
         tup = (tup..., val)
     end
 
@@ -103,7 +103,7 @@ function unmarshal(DT :: Type{T}, parsedJson :: Array{Any,N}, verbose :: Bool = 
         prettyPrint(verboseLvl, "$(T) $(N) Dimensions, length $(length(parsedJson))")
         verboseLvl += 1
     end
-    
+
     ((unmarshal(fieldtype(T,1), field, verbose, verboseLvl) for field in parsedJson)...,)
 end
 
@@ -119,7 +119,7 @@ function unmarshal(DT :: Type{T}, parsedJson :: Associative, verbose :: Bool = f
     val
 end
 
-unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T<:Number = T(x) 
+unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T<:Number = T(x)
 unmarshal(::Type{Nullable{T}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable(unmarshal(T, x))
 unmarshal(::Type{Nullable{T}}, x::Void, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable{T}()
 
