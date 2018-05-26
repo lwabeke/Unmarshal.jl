@@ -15,26 +15,6 @@ end
 export unmarshal # returns a reconstructed variable from a JSON parsed string
 
 using JSON
-"""
-
-unmarshal(T, dict, verbose = false)
-
-Reconstructs an object of Type T using the dictionary output of a JSON.parse.
-
-Set verbose `true` to get debug information about how the data hierarchy is unmarshalled. This might be useful to track down parsing errors and/or mismatches between the JSON object and the Type definition.
-
-#Example
-
-```jldoctest
-julia> using JSON
-
-julia> var = randn(Float64, 5);  # Should work for most other variations of types you can think of
-
-julia> unmarshal(typeof(var), JSON.parse(JSON.json(var)) ) == var
-true
-```
-
-"""
 function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0)
     if (verbose)
         prettyPrint(verboseLvl, "$(DT) (String)")
@@ -64,6 +44,25 @@ function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = fa
 end
 
 
+"""
+    unmarshal(T, dict[, verbose[, verboselvl]])
+
+Reconstructs an object of Type T using the dictionary output of a `JSON.parse.`
+
+Set verbose `true` to get debug information about how the data hierarchy is unmarshalled. This might be useful to track down parsing errors and/or mismatches between the JSON object and the Type definition.
+
+# Example
+
+```jldoctest
+julia> using JSON
+
+julia> var = randn(Float64, 5);  # Should work for most other variations of types you can think of
+
+julia> unmarshal(typeof(var), JSON.parse(JSON.json(var)) ) == var
+true
+```
+
+"""
 function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = false, verboseLvl :: Int = 0)
     if (verbose)
             prettyPrint(verboseLvl, "$(DT) Associative")
