@@ -147,7 +147,7 @@ unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) 
 unmarshal(::Type{Nullable{T}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable(unmarshal(T, x))
 unmarshal(::Type{Nullable{T}}, x::Void, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable{T}()
 
-#unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
-#    throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
+unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
+    throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
 
 end # module
