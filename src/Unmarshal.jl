@@ -23,7 +23,11 @@ function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, ve
         prettyPrint(verboseLvl, "$(DT) (String)")
         verboseLvl+=1
     end
-    DT(parsedJson)
+    if DT <: Array
+        [parsedJson]
+    else
+        DT(parsedJson)
+    end
 end
 
 function unmarshal(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E
@@ -44,6 +48,26 @@ function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = fa
     end
 
     cat(N, (unmarshal(Array{E,N-1}, x, verbose, verboseLvl) for x in parsedJson)...)
+end
+
+function unmarshal(::Type{Vector{E}}, parsedJson::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where E<:Number
+    if (verbose)
+        prettyPrint(verboseLvl, "Vector{$E}")
+        verboseLvl+=1
+    end
+
+    [(unmarshal(E, field, verbose, verboseLvl) for field in parsedJson)...]
+end
+
+unmarshal(::Type{Array{E}}, xs::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where E<:Number = unmarshal(Vector{E}, xs, verbose, verboseLvl)
+
+function unmarshal(::Type{Array{E, N}}, parsedJson::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where {E<:Number, N}
+    if (verbose)
+        prettyPrint(verboseLvl, "Array{$E, $N}")
+        verboseLvl+=1
+    end
+
+    cat(N, E(parsedJson))
 end
 
 
@@ -130,4 +154,3 @@ unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
     throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
 
 end # module
-
