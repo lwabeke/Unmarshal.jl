@@ -8,39 +8,22 @@ function prettyPrint(verboseLvl, str)
     for cntr=1:verboseLvl
         tabs = tabs * "\t"
     end
-    println("$(tabs)$(str)")    
+    println("$(tabs)$(str)")
 end
 
 
 export unmarshal # returns a reconstructed variable from a JSON parsed string
 
 using JSON
-"""
+import Missings: Missing, missing
+import Nullables: Nullable
 
-unmarshal(T, dict, verbose = false)
-
-Reconstructs an object of Type T using the dictionary output of a JSON.parse.
-
-Set verbose `true` to get debug information about how the data hierarchy is unmarshalled. This might be useful to track down parsing errors and/or mismatches between the JSON object and the Type definition.
-
-#Example
-
-```jldoctest
-julia> using JSON
-
-julia> var = randn(Float64, 5);  # Should work for most other variations of types you can think of
-
-julia> unmarshal(typeof(var), JSON.parse(JSON.json(var)) ) == var
-true
-```
-
-"""
-function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0) 
+function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0)
     if (verbose)
         prettyPrint(verboseLvl, "$(DT) (String)")
         verboseLvl+=1
     end
-	DT(parsedJson)
+    DT(parsedJson)
 end
 
 function unmarshal(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E
@@ -64,6 +47,25 @@ function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = fa
 end
 
 
+"""
+    unmarshal(T, dict[, verbose[, verboselvl]])
+
+Reconstructs an object of Type T using the dictionary output of a `JSON.parse.`
+
+Set verbose `true` to get debug information about how the data hierarchy is unmarshalled. This might be useful to track down parsing errors and/or mismatches between the JSON object and the Type definition.
+
+# Example
+
+```jldoctest
+julia> using JSON
+
+julia> var = randn(Float64, 5);  # Should work for most other variations of types you can think of
+
+julia> unmarshal(typeof(var), JSON.parse(JSON.json(var)) ) == var
+true
+```
+
+"""
 function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = false, verboseLvl :: Int = 0)
     if (verbose)
             prettyPrint(verboseLvl, "$(DT) Associative")
@@ -77,21 +79,21 @@ function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = fals
     tup = ()
     for iter in fieldnames(DT)
         DTNext = fieldtype(DT,iter)
-#        @show iter, DTNext, !haskey(parsedJson, string(iter)) 
+#        @show iter, DTNext, !haskey(parsedJson, string(iter))
 
         if !haskey(parsedJson, string(iter)) 
-            try
-            	val = DTNext()
-            catch ex
-            	if isa(ex, MethodError)
-                    throw(ArgumentError("Key $(string(iter)) is missing from the structure $(DT) and field is not Nullable"))
-               end
-                rethrow(ex)
-            end # try-cath
+            # check whether DTNext is compatible with any scheme for missing values
+            val = if DTNext <: Nullable
+                DTNext()
+            elseif Missing <: DTNext
+                missing
+            else
+                throw(ArgumentError("Key $(string(iter)) is missing from the structure $DT, and field is neither Nullable nor Missings-compatible"))
+            end
         else
             val = unmarshal( DTNext, parsedJson[string(iter)], verbose, verboseLvl)
         end
-            
+
         tup = (tup..., val)
     end
 
@@ -103,7 +105,7 @@ function unmarshal(DT :: Type{T}, parsedJson :: Array{Any,N}, verbose :: Bool = 
         prettyPrint(verboseLvl, "$(T) $(N) Dimensions, length $(length(parsedJson))")
         verboseLvl += 1
     end
-    
+
     ((unmarshal(fieldtype(T,1), field, verbose, verboseLvl) for field in parsedJson)...,)
 end
 
@@ -119,9 +121,10 @@ function unmarshal(DT :: Type{T}, parsedJson :: Associative, verbose :: Bool = f
     val
 end
 
-unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T<:Number = T(x) 
+unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T<:Number = T(x)
 unmarshal(::Type{Nullable{T}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable(unmarshal(T, x))
 unmarshal(::Type{Nullable{T}}, x::Void, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable{T}()
+unmarshal(::Type{Union{T,Missing}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = unmarshal(T, x, verbose, verboseLvl)
 
 unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
     throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
