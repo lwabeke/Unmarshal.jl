@@ -1,5 +1,7 @@
 using Unmarshal
 using JSON
+import Missings: Missing, missing
+
 using Base.Test
 import Base.==
 
@@ -22,13 +24,15 @@ end
 immutable Qux
     baz::Nullable{String}
     bar::Bar
+    foo::Union{Missing,Float64}
+    missingfield::Union{Missing,String}
 end
 
 
 @test Unmarshal.unmarshal(Foo, JSON.parse(input)) === Foo(Bar(17))
 @test Unmarshal.unmarshal(Baz, JSON.parse(input)) === Baz(Nullable(3.14), Bar(17))
-@test Unmarshal.unmarshal(Qux, JSON.parse(input)) === Qux(Nullable{String}(),Bar(17))
-@test_throws ArgumentError Unmarshal.unmarshal(Bar, JSON.parse(input)) 
+@test Unmarshal.unmarshal(Qux, JSON.parse(input)) === Qux(Nullable{String}(),Bar(17),3.14,missing)
+@test_throws ArgumentError Unmarshal.unmarshal(Bar, JSON.parse(input))
 
 #Test for structures of handling 1-D arrays
 type StructOfArrays
@@ -153,3 +157,4 @@ dictTest = DictTest(Dict{Int, String}(1 => "Test1", 2 => "Test2"))
 #@show JSON.json(dictTest)
 #@show JSON.parse(JSON.json(dictTest))
 @test Unmarshal.unmarshal(DictTest, JSON.parse(JSON.json(dictTest)),true) == dictTest
+
