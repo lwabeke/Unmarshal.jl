@@ -1,41 +1,43 @@
 using Unmarshal
 using JSON
-import Missings: Missing, missing
+#import Missings: Missing, missing
+using Nullables
+using LinearAlgebra
 
-using Base.Test
+using Test
 import Base.==
 
 #Tests for various type of composite structures, including Nullables
 input = "{ \"bar\": { \"baz\": 17 }, \"foo\": 3.14 }"
 
-immutable Bar
+struct Bar
     baz::Int
 end
 
-immutable Foo
+struct Foo
     bar::Bar
 end
 
-immutable Baz
-    foo::Nullable{Float64}
+struct Baz
+    foo::Union{Nothing,Float64}
     bar::Bar
 end
 
-immutable Qux
-    baz::Nullable{String}
+struct Qux
+    baz::Union{Nothing,String}
     bar::Bar
-    foo::Union{Missing,Float64}
-    missingfield::Union{Missing,String}
+    foo::Union{Nothing,Float64}
+    missingfield::Union{Nothing,String}
 end
 
 
 @test Unmarshal.unmarshal(Foo, JSON.parse(input)) === Foo(Bar(17))
-@test Unmarshal.unmarshal(Baz, JSON.parse(input)) === Baz(Nullable(3.14), Bar(17))
-@test Unmarshal.unmarshal(Qux, JSON.parse(input)) === Qux(Nullable{String}(),Bar(17),3.14,missing)
+@test Unmarshal.unmarshal(Baz, JSON.parse(input)) === Baz(3.14, Bar(17))
+@test Unmarshal.unmarshal(Qux, JSON.parse(input)) === Qux(Nothing(),Bar(17),3.14,Nothing())
 @test_throws ArgumentError Unmarshal.unmarshal(Bar, JSON.parse(input))
 
 #Test for structures of handling 1-D arrays
-type StructOfArrays
+mutable struct StructOfArrays
         a1 :: Array{Float32, 1}
         a2 :: Array{Int, 1}
     end
@@ -49,7 +51,7 @@ jstring = JSON.json(tmp)
 @test Unmarshal.unmarshal(StructOfArrays, JSON.parse(jstring)) == tmp
 
 #Test for handling 2-D arrays
-type StructOfArrays2D
+mutable struct StructOfArrays2D
         a3 :: Array{Float64, 2}
         a4 :: Array{Int, 2}
     end
@@ -58,7 +60,7 @@ function ==(A :: StructOfArrays2D, B :: StructOfArrays2D)
     A.a3 == B.a3 && A.a4 == B.a4
 end
 
-tmp2 = StructOfArrays2D(ones(Float64, 2, 3), eye(Int, 2, 3))
+tmp2 = StructOfArrays2D(ones(Float64, 2, 3), Matrix{Int}(I, 2, 3))
 jstring = JSON.json(tmp2)
 @test Unmarshal.unmarshal(StructOfArrays2D, JSON.parse(jstring))  == tmp2
 
@@ -68,7 +70,7 @@ jstring = JSON.json(tmp3)
 @test Unmarshal.unmarshal(Array{Float64, 3}, JSON.parse(jstring))  == tmp3
 
 #Test for handling arrays of composite entities
-tmp4 = Array{Array{Int,2}}(2)
+tmp4 = Array{Array{Int,2}}(undef, 2)
 
 tmp4[1] = ones(Int, 3, 4)
 tmp4[2] = zeros(Int, 1, 2)
@@ -86,18 +88,18 @@ jstring = JSON.json(tmp6)
 @test Unmarshal.unmarshal(Array{Complex{Float32},2}, JSON.parse(jstring)) == tmp6
 
 # Test to see handling of abstract types
-type reconfigurable{T}
+mutable struct reconfigurable{T}
     x :: T
     y :: T
     z :: Int
 end
 
-function =={T1, T2}(A :: reconfigurable{T1}, B :: reconfigurable{T2})
+function ==(A :: reconfigurable{T1}, B :: reconfigurable{T2}) where {T1, T2}
     T1 == T2 && A.x == B.x && A.y == B.y && A.z == B.z
 end
 
 
-type higherlayer
+mutable struct higherlayer
     val :: reconfigurable
 end
 
@@ -120,7 +122,7 @@ jstring = JSON.json(tmp3)
 @test Unmarshal.unmarshal(String, JSON.parse(json("Test")), true) == "Test"
 
 # Added test cases to attempt getting 100% code coverage
-@test isequal(unmarshal(Nullable{Int64}, Void()), Nullable{Int64}())
+@test isequal(unmarshal(Nullable{Int64}, Nothing()), Nullable{Int64}())
 
 @test_throws ArgumentError unmarshal(Nullable{Int64}, ones(Float64, 1))
 
@@ -128,7 +130,7 @@ jstring = JSON.json(tmp3)
 testTuples = ((1.0, 2.0, 3.0, 4.0), (2.0, 3.0))
 jstring = JSON.json(testTuples)
 @test Unmarshal.unmarshal(Tuple{Tuple{Float64}}, JSON.parse(jstring)) == testTuples
-@test Unmarshal.unmarshal(Tuple{Array{Float64}}, JSON.parse(jstring)) == (([testElement...] for testElement in testTuples)...)
+@test Unmarshal.unmarshal(Tuple{Array{Float64}}, JSON.parse(jstring)) == (([testElement...] for testElement in testTuples)...,)
 @test Unmarshal.unmarshal(Array{Tuple{Float64}}, JSON.parse(jstring)) == [testTuples...]
 @test Unmarshal.unmarshal(Array{Array{Float64}}, JSON.parse(jstring)) == [([testElement...] for testElement in testTuples)...]
 @test Unmarshal.unmarshal(Tuple{Tuple{Float64}}, JSON.parse(jstring), true) == testTuples

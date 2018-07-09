@@ -8,7 +8,7 @@
 [![codecov.io](http://codecov.io/github/lwabeke/Unmarshal.jl/coverage.svg?branch=master)](http://codecov.io/github/lwabeke/Unmarshal.jl?branch=master)
 
 
-**Installation**: `julia> Pkg.add("Unmarshal")`
+**Installation**: `pkg> add Unmarshal`
 
 
 ## Basic Usage
@@ -22,16 +22,11 @@ using JSON
 
 input = "{ \"bar\": { \"baz\": 17 }, \"foo\": 3.14 }"
 
-immutable Bar
+struct Bar
     baz::Int
 end
 
-immutable Foo
-    bar::Bar
-end
-
-immutable Baz
-    foo::Nullable{Float64}
+struct Foo
     bar::Bar
 end
 
