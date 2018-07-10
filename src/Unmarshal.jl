@@ -50,26 +50,6 @@ function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = fa
     cat((unmarshal(Array{E,N-1}, x, verbose, verboseLvl) for x in parsedJson)..., dims=N)
 end
 
-function unmarshal(::Type{Vector{E}}, parsedJson::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where E<:Number
-    if (verbose)
-        prettyPrint(verboseLvl, "Vector{$E}")
-        verboseLvl+=1
-    end
-
-    [(unmarshal(E, field, verbose, verboseLvl) for field in parsedJson)...]
-end
-
-unmarshal(::Type{Array{E}}, xs::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where E<:Number = unmarshal(Vector{E}, xs, verbose, verboseLvl)
-
-function unmarshal(::Type{Array{E, N}}, parsedJson::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where {E<:Number, N}
-    if (verbose)
-        prettyPrint(verboseLvl, "Array{$E, $N}")
-        verboseLvl+=1
-    end
-
-    cat(E(parsedJson), dims=N)
-end
-
 
 """
     unmarshal(T, dict[, verbose[, verboselvl]])
@@ -156,5 +136,27 @@ unmarshal(::Type{Union{T,Nothing}}, x, verbose :: Bool = false, verboseLvl :: In
 
 unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
     throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
+
+#The following functions have been moved here to the end, since they appear to be unused by codecov. Consider deleting them unless actual use cases can be identified
+function unmarshal(::Type{Vector{E}}, parsedJson::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where E<:Number
+    if (verbose)
+        prettyPrint(verboseLvl, "Vector{$E}")
+        verboseLvl+=1
+    end
+
+    [(unmarshal(E, field, verbose, verboseLvl) for field in parsedJson)...]
+end
+
+unmarshal(::Type{Array{E}}, xs::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where E<:Number = unmarshal(Vector{E}, xs, verbose, verboseLvl)
+
+function unmarshal(::Type{Array{E, N}}, parsedJson::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where {E<:Number, N}
+    if (verbose)
+        prettyPrint(verboseLvl, "Array{$E, $N}")
+        verboseLvl+=1
+    end
+
+    cat(E(parsedJson), dims=N)
+end
+
 
 end # module
