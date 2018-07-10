@@ -70,20 +70,20 @@ true
 ```
 
 """
-function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = false, verboseLvl :: Int = 0)
+function unmarshal(DT :: Type, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0)
     if (verbose)
-            prettyPrint(verboseLvl, "$(DT) Associative")
+            prettyPrint(verboseLvl, "$(DT) AbstractDict")
         verboseLvl+=1
     end
 
-    if !isleaftype(DT)
+    if !isconcretetype(DT)
         throw(ArgumentError("Cannot unmarshal a non-leaf type $(DT) without a custom specialization"))
     end
 
     tup = ()
     for iter in fieldnames(DT)
         DTNext = fieldtype(DT,iter)
-#        @show iter, DTNext, !haskey(parsedJson, string(iter))
+ #       @show iter, DTNext, !haskey(parsedJson, string(iter))
 
         if !haskey(parsedJson, string(iter)) 
             # check whether DTNext is compatible with any scheme for missing values
@@ -91,10 +91,13 @@ function unmarshal(DT :: Type, parsedJson :: Associative, verbose :: Bool = fals
                 DTNext()
             elseif Missing <: DTNext
                 missing
+            elseif Nothing <: DTNext
+                Nothing()
             else
-                throw(ArgumentError("Key $(string(iter)) is missing from the structure $DT, and field is neither Nullable nor Missings-compatible"))
+                throw(ArgumentError("Key $(string(iter)) is missing from the structure $DT, and field is neither Nullable nor Missings nor Nothing-compatible"))
             end
         else
+ #@show DTNext, parsedJson[string(iter)], verbose, verboseLvl
             val = unmarshal( DTNext, parsedJson[string(iter)], verbose, verboseLvl)
         end
 
@@ -113,7 +116,7 @@ function unmarshal(DT :: Type{T}, parsedJson :: Array{Any,N}, verbose :: Bool = 
     ((unmarshal(fieldtype(T,1), field, verbose, verboseLvl) for field in parsedJson)...,)
 end
 
-function unmarshal(DT :: Type{T}, parsedJson :: Associative, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Dict
+function unmarshal(DT :: Type{T}, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Dict
     if (verbose)
         prettyPrint(verboseLvl, "$(DT) Dict ")
         verboseLvl += 1
@@ -127,8 +130,9 @@ end
 
 unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T<:Number = T(x)
 unmarshal(::Type{Nullable{T}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable(unmarshal(T, x))
-unmarshal(::Type{Nullable{T}}, x::Void, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable{T}()
+unmarshal(::Type{Nullable{T}}, x::Nothing, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable{T}()
 unmarshal(::Type{Union{T,Missing}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = unmarshal(T, x, verbose, verboseLvl)
+unmarshal(::Type{Union{T,Nothing}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = unmarshal(T, x, verbose, verboseLvl)
 
 unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
     throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
@@ -153,6 +157,7 @@ function unmarshal(::Type{Array{E, N}}, parsedJson::Number, verbose :: Bool = fa
 
     cat(E(parsedJson), dims=N)
 end
+
 
 
 end # module
