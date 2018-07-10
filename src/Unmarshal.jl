@@ -47,7 +47,7 @@ function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = fa
         verboseLvl+=1
     end
 
-    cat(N, (unmarshal(Array{E,N-1}, x, verbose, verboseLvl) for x in parsedJson)...)
+    cat((unmarshal(Array{E,N-1}, x, verbose, verboseLvl) for x in parsedJson)..., dims=N)
 end
 
 
@@ -151,7 +151,8 @@ function unmarshal(::Type{Array{E, N}}, parsedJson::Number, verbose :: Bool = fa
         verboseLvl+=1
     end
 
-    cat(N, E(parsedJson))
+    cat(E(parsedJson), dims=N)
 end
+
 
 end # module
