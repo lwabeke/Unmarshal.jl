@@ -9,6 +9,7 @@ import Base.==
 
 #Tests for various type of composite structures, including Nullables
 input = "{ \"bar\": { \"baz\": 17 }, \"foo\": 3.14 }"
+input2 = "{ \"bar\": { \"baz\": 17 }, \"foot\": 3.14 }"
 
 struct Bar
     baz::Int
@@ -18,8 +19,18 @@ struct Foo
     bar::Bar
 end
 
-struct Baz
+struct BazNothing
     foo::Union{Nothing,Float64}
+    bar::Bar
+end
+
+struct BazMissing
+    foo::Union{Missing,Float64}
+    bar::Bar
+end
+
+struct BazNullable
+    foo::Nullables.Nullable{Float64}
     bar::Bar
 end
 
@@ -32,7 +43,12 @@ end
 
 
 @test Unmarshal.unmarshal(Foo, JSON.parse(input)) === Foo(Bar(17))
-@test Unmarshal.unmarshal(Baz, JSON.parse(input)) === Baz(3.14, Bar(17))
+@test Unmarshal.unmarshal(BazNothing, JSON.parse(input)) === BazNothing(3.14, Bar(17))
+@test Unmarshal.unmarshal(BazMissing, JSON.parse(input)) === BazMissing(3.14, Bar(17))
+@test Unmarshal.unmarshal(BazNullable, JSON.parse(input)) === BazNullable(3.14, Bar(17))
+@test Unmarshal.unmarshal(BazNothing, JSON.parse(input2)) === BazNothing(nothing, Bar(17))
+@test Unmarshal.unmarshal(BazMissing, JSON.parse(input2)) === BazMissing(missing, Bar(17))
+@show Unmarshal.unmarshal(BazNullable, JSON.parse(input2)) === BazNullable(Nullable{Float64}(), Bar(17))
 @test Unmarshal.unmarshal(Qux, JSON.parse(input)) === Qux(Nothing(),Bar(17),3.14,Nothing())
 @test_throws ArgumentError Unmarshal.unmarshal(Bar, JSON.parse(input))
 
