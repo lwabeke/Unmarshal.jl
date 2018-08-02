@@ -158,3 +158,24 @@ dictTest = DictTest(Dict{Int, String}(1 => "Test1", 2 => "Test2"))
 #@show JSON.parse(JSON.json(dictTest))
 @test Unmarshal.unmarshal(DictTest, JSON.parse(JSON.json(dictTest)),true) == dictTest
 
+@show dictTest2 = Dict("k"=>"val")
+@test Unmarshal.unmarshal(typeof(dictTest2), JSON.parse(JSON.json(dictTest2)), true) == dictTest2
+
+mutable struct TestUnmarshal
+  a::String
+  b::String
+  links::Dict{String, String}
+end
+
+function ==(T1 :: TestUnmarshal, T2 :: TestUnmarshal)
+    T1.a == T2.a && T1.b == T2.b && T1.links == T2.links
+end
+
+raw = "{\"a\": \"\",\"b\": \"Test\",\"links\": {\"self\": \"TestDict\"}}"
+j = JSON.parse(raw)
+@show Unmarshal.unmarshal(TestUnmarshal, j)
+@test Unmarshal.unmarshal(TestUnmarshal, j) == TestUnmarshal("", "Test", Dict("self"=>"TestDict"))
+t = TestUnmarshal("", "Test", Dict("self"=>"TestDict"))
+@test Unmarshal.unmarshal(TestUnmarshal, JSON.parse(JSON.json(t))) == t
+
+
