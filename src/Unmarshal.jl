@@ -123,7 +123,16 @@ function unmarshal(DT :: Type{T}, parsedJson :: AbstractDict, verbose :: Bool = 
     end
     val = DT()
     for iter in keys(parsedJson)
-        val[unmarshal(keytype(DT),JSON.parse(iter),verbose, verboseLvl)] = unmarshal(valtype(DT), parsedJson[iter], verbose, verboseLvl)
+        tmp = unmarshal(valtype(DT), parsedJson[iter], verbose, verboseLvl) 
+        if keytype(DT) <: AbstractString
+            val[iter] = tmp 
+        else
+            try
+                val[unmarshal(keytype(DT),JSON.parse(iter),verbose, verboseLvl)] = tmp # Use JSON.parse and Unmarshal to cast from type of iter to ketype(DT)
+            catch ex
+                val[keytype(DT)(iter)] = tmp  # Try direct casting, which will hopefully generate a readable enough exception error if it fails
+            end
+        end
     end
     val
 end
