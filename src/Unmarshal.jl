@@ -83,7 +83,9 @@ function unmarshal(DT :: Type, parsedJson :: AbstractDict, verbose :: Bool = fal
     tup = ()
     for iter in fieldnames(DT)
         DTNext = fieldtype(DT,iter)
- #       @show iter, DTNext, !haskey(parsedJson, string(iter))
+        if (verbose)
+           prettyPrint(verboseLvl-1, "\\--> $(iter) <: $(DTNext) ")
+        end
 
         if !haskey(parsedJson, string(iter)) 
             # check whether DTNext is compatible with any scheme for missing values
@@ -97,7 +99,6 @@ function unmarshal(DT :: Type, parsedJson :: AbstractDict, verbose :: Bool = fal
                 throw(ArgumentError("Key $(string(iter)) is missing from the structure $DT, and field is neither Nullable nor Missings nor Nothing-compatible"))
             end
         else
- #@show DTNext, parsedJson[string(iter)], verbose, verboseLvl
             val = unmarshal( DTNext, parsedJson[string(iter)], verbose, verboseLvl)
         end
 
@@ -123,6 +124,9 @@ function unmarshal(DT :: Type{T}, parsedJson :: AbstractDict, verbose :: Bool = 
     end
     val = DT()
     for iter in keys(parsedJson)
+        if (verbose)
+           prettyPrint(verboseLvl-1, "\\--> $(iter) ")
+        end
         tmp = unmarshal(valtype(DT), parsedJson[iter], verbose, verboseLvl) 
         if keytype(DT) <: AbstractString
             val[iter] = tmp 
