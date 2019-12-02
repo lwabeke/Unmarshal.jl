@@ -5,7 +5,7 @@ module Unmarshal
 # Helper function
 function prettyPrint(verboseLvl, str)
     tabs = ""
-    for cntr=1:verboseLvl
+    for cntr = 1:verboseLvl
         tabs = tabs * "\t"
     end
     println("$(tabs)$(str)")
@@ -22,7 +22,7 @@ import Nullables: Nullable
 unmarshal(::Type{Any}, x::String, verbose :: Bool = false, verboseLvl :: Int = 0) = x
 unmarshal(::Type{Any}, x, verbose :: Bool = false, verboseLvl :: Int = 0) = x
 function unmarshal(::Type{Any}, xs::Vector{E}, verbose :: Bool = false, verboseLvl :: Int = 0) where E
-    if (verbose)
+    if verbose
         prettyPrint(verboseLvl, "Vector{$E}")
         prettyPrint(verboseLvl, "List")
         verboseLvl += 1
@@ -31,17 +31,17 @@ function unmarshal(::Type{Any}, xs::Vector{E}, verbose :: Bool = false, verboseL
 end
 
 function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0)
-    if (verbose)
+    if verbose
         prettyPrint(verboseLvl, "$(DT) (String)")
-        verboseLvl+=1
+        verboseLvl += 1
     end
     DT(parsedJson)
 end
 
 function unmarshal(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E
-    if (verbose)
+    if verbose
         prettyPrint(verboseLvl, "Vector{$E}")
-        verboseLvl+=1
+        verboseLvl += 1
     end
 
     [(unmarshal(E, field, verbose, verboseLvl) for field in parsedJson)...]
@@ -50,9 +50,9 @@ end
 unmarshal(::Type{Array{E}}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E = unmarshal(Vector{E}, xs, verbose, verboseLvl)
 
 function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where {E, N}
-    if (verbose)
+    if verbose
         prettyPrint(verboseLvl, "Array{$E, $N}")
-        verboseLvl+=1
+        verboseLvl += 1
     end
 
     cat((unmarshal(Array{E,N-1}, x, verbose, verboseLvl) for x in parsedJson)..., dims=N)
@@ -82,9 +82,9 @@ true
 
 """
 function unmarshal(DT :: Type, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0)
-    if (verbose)
+    if verbose
             prettyPrint(verboseLvl, "$(DT) AbstractDict")
-        verboseLvl+=1
+        verboseLvl += 1
     end
 
     if !isconcretetype(DT)
@@ -94,7 +94,7 @@ function unmarshal(DT :: Type, parsedJson :: AbstractDict, verbose :: Bool = fal
     tup = ()
     for iter in fieldnames(DT)
         DTNext = fieldtype(DT,iter)
-        if (verbose)
+        if verbose
            prettyPrint(verboseLvl-1, "\\--> $(iter) <: $(DTNext) ")
         end
 
@@ -120,7 +120,7 @@ function unmarshal(DT :: Type, parsedJson :: AbstractDict, verbose :: Bool = fal
 end
 
 function unmarshal(::Type{T}, parsedJson :: Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where {T <: Tuple}
-    if (verbose)
+    if verbose
         prettyPrint(verboseLvl, "$T")
         verboseLvl += 1
     end
@@ -128,15 +128,34 @@ function unmarshal(::Type{T}, parsedJson :: Vector, verbose :: Bool = false, ver
     ((unmarshal(fieldtype(T, i), field, verbose, verboseLvl) for (i, field) in enumerate(parsedJson))...,)
 end
 
+function _unmarshal(::Type{T}, key :: Symbol, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) where T
+    if verbose
+        prettyPrint(verboseLvl - 1, "\\--> $(key) ")
+    end
+    unmarshal(T, parsedJson[string(key)], verbose, verboseLvl)
+end
+
+function unmarshal(::Type{NamedTuple{NS, TS}}, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) where {NS, TS}
+    if verbose
+        prettyPrint(verboseLvl, "$T NamedTuple ")
+        verboseLvl += 1
+    end
+
+    NamedTuple{NS}(_unmarshal(T, key, parsedJson, verbose, verboseLvl) for (i, (T, key)) in enumerate(zip(TS.parameters, NS)))
+end
+unmarshal(::Type{NamedTuple{NS}}, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) where NS = unmarshal(NamedTuple{NS, NTuple{length(NS), Any}}, parsedJson, verbose, verboseLvl)
+unmarshal(::Type{NamedTuple}, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) = unmarshal(NamedTuple{(Symbol.(keys(parsedJson))...,)}, parsedJson, verbose, verboseLvl)
+
+
 function unmarshal(DT :: Type{T}, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Dict
-    if (verbose)
+    if verbose
         prettyPrint(verboseLvl, "$(DT) Dict ")
         verboseLvl += 1
     end
     val = DT()
     for iter in keys(parsedJson)
-        if (verbose)
-           prettyPrint(verboseLvl-1, "\\--> $(iter) ")
+        if verbose
+           prettyPrint(verboseLvl - 1, "\\--> $(iter) ")
         end
         tmp = unmarshal(valtype(DT), parsedJson[iter], verbose, verboseLvl) 
         if keytype(DT) <: AbstractString

@@ -165,18 +165,23 @@ struct TupleTest
     a::Tuple
     b::Tuple{Int64, Float64}
     c::Tuple{Float64, Vararg{Int64}}
-#    d::NamedTuple{(:x, :y)}
-#    e::NamedTuple{(:x, :y), Tuple{Int64, Float64}}
+    d::NamedTuple{(:x, :y)}
+    e::NamedTuple{(:x, :y), Tuple{Int64, Float64}}
 end
 testTuples = TupleTest(
     ("a", 1, 5),
     (5, 3.5),
     (1.2, 6, 7, 3),
-#    (x = 5, y = 9),
-#    (x = 3, y = 1.4)
+    (x = 5, y = 9),
+    (x = 3, y = 1.4),
 )
 jstring = JSON.json(testTuples)
 @test Unmarshal.unmarshal(TupleTest, JSON.parse(jstring)) == testTuples
+
+testNamedTuple = (x = 5, y = 9, z = "z")
+jstring = JSON.json(testNamedTuple)
+resultNamedTuple = Unmarshal.unmarshal(NamedTuple, JSON.parse(jstring))
+@test all(getfield(testNamedTuple, key) == getfield(resultNamedTuple, key) for key in keys(testNamedTuple))
 
 mutable struct DictTest
     testDict::Dict{Int, String}
