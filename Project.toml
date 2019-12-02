@@ -1,0 +1,19 @@
+name = "Unmarshal"
+uuid = "ac826960-1556-11ea-1175-3f8dc11cd404"
+authors = ["Leon Wabeke <leonwabeke@gmail.com>", "Sunoru <s@sunoru.com>"]
+version = "0.3.0"
+
+[deps]
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+Missings = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
+Nullables = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
+
+[compat]
+julia = "1"
+
+[extras]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["LinearAlgebra", "Test"]

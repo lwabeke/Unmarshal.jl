@@ -18,16 +18,24 @@ using JSON
 import Missings: Missing, missing
 import Nullables: Nullable
 
+
+unmarshal(::Type{Any}, x::String, verbose :: Bool = false, verboseLvl :: Int = 0) = x
+unmarshal(::Type{Any}, x, verbose :: Bool = false, verboseLvl :: Int = 0) = x
+function unmarshal(::Type{Any}, xs::Vector{E}, verbose :: Bool = false, verboseLvl :: Int = 0) where E
+    if (verbose)
+        prettyPrint(verboseLvl, "Vector{$E}")
+        prettyPrint(verboseLvl, "List")
+        verboseLvl += 1
+    end
+    [(unmarshal(E, x, verbose, verboseLvl) for x in xs)...]
+end
+
 function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0)
     if (verbose)
         prettyPrint(verboseLvl, "$(DT) (String)")
         verboseLvl+=1
     end
-    if DT <: Array
-        [parsedJson]
-    else
-        DT(parsedJson)
-    end
+    DT(parsedJson)
 end
 
 function unmarshal(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E
@@ -49,6 +57,9 @@ function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = fa
 
     cat((unmarshal(Array{E,N-1}, x, verbose, verboseLvl) for x in parsedJson)..., dims=N)
 end
+
+unmarshal(::Type{Array{E, N} where E}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where N = unmarshal(Array{Any, N}, xs, verbose, verboseLvl)
+unmarshal(::Type{Array}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where N = unmarshal(Vector{Any}, xs, verbose, verboseLvl)
 
 
 """
@@ -108,13 +119,13 @@ function unmarshal(DT :: Type, parsedJson :: AbstractDict, verbose :: Bool = fal
     DT(tup...)
 end
 
-function unmarshal(DT :: Type{T}, parsedJson :: Array{Any,N}, verbose :: Bool = false, verboseLvl :: Int = 0) where {T<:Tuple, N}
+function unmarshal(::Type{T}, parsedJson :: Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where {T <: Tuple}
     if (verbose)
-        prettyPrint(verboseLvl, "$(T) $(N) Dimensions, length $(length(parsedJson))")
+        prettyPrint(verboseLvl, "$T")
         verboseLvl += 1
     end
 
-    ((unmarshal(fieldtype(T,1), field, verbose, verboseLvl) for field in parsedJson)...,)
+    ((unmarshal(fieldtype(T, i), field, verbose, verboseLvl) for (i, field) in enumerate(parsedJson))...,)
 end
 
 function unmarshal(DT :: Type{T}, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Dict
@@ -141,7 +152,7 @@ function unmarshal(DT :: Type{T}, parsedJson :: AbstractDict, verbose :: Bool = 
     val
 end
 
-unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T<:Number = T(x)
+unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Number = T(x)
 unmarshal(::Type{Nullable{T}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable(unmarshal(T, x))
 unmarshal(::Type{Nullable{T}}, x::Nothing, verbose :: Bool = false, verboseLvl :: Int = 0) where T = Nullable{T}()
 unmarshal(::Type{Union{T,Missing}}, x, verbose :: Bool = false, verboseLvl :: Int = 0) where T = unmarshal(T, x, verbose, verboseLvl)
@@ -149,28 +160,5 @@ unmarshal(::Type{Union{T,Nothing}}, x, verbose :: Bool = false, verboseLvl :: In
 
 unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
     throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
-
-#The following functions have been moved here to the end, since they appear to be unused by codecov. Consider deleting them unless actual use cases can be identified
-function unmarshal(::Type{Vector{E}}, parsedJson::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where E<:Number
-    if (verbose)
-        prettyPrint(verboseLvl, "Vector{$E}")
-        verboseLvl+=1
-    end
-
-    [(unmarshal(E, field, verbose, verboseLvl) for field in parsedJson)...]
-end
-
-unmarshal(::Type{Array{E}}, xs::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where E<:Number = unmarshal(Vector{E}, xs, verbose, verboseLvl)
-
-function unmarshal(::Type{Array{E, N}}, parsedJson::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where {E<:Number, N}
-    if (verbose)
-        prettyPrint(verboseLvl, "Array{$E, $N}")
-        verboseLvl+=1
-    end
-
-    cat(E(parsedJson), dims=N)
-end
-
-
 
 end # module
