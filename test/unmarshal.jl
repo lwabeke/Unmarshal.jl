@@ -52,6 +52,9 @@ end
 @test Unmarshal.unmarshal(Qux, JSON.parse(input)) === Qux(Nothing(),Bar(17),3.14,Nothing())
 @test_throws ArgumentError Unmarshal.unmarshal(Bar, JSON.parse(input))
 
+#Test for handling of 1-D arrays
+@test Unmarshal.unmarshal(Array{Float64,1}, ones(10), true) == ones(10)
+
 #Test for structures of handling 1-D arrays
 mutable struct StructOfArrays
     a1 :: Array{Float32, 1}
@@ -144,6 +147,7 @@ jstring = JSON.json(tmp3)
 
 # Test handling of Any
 @test Unmarshal.unmarshal(Any, [1, 2]) == [1, 2]
+@test Unmarshal.unmarshal(Any, [1, 2], true) == [1, 2]
 
 # Test handling of Tuples
 testTuples = ((1.0, 2.0, 3.0, 4.0), (2.0, 3.0))
@@ -177,6 +181,7 @@ testTuples = TupleTest(
 )
 jstring = JSON.json(testTuples)
 @test Unmarshal.unmarshal(TupleTest, JSON.parse(jstring)) == testTuples
+@test Unmarshal.unmarshal(TupleTest, JSON.parse(jstring), true) == testTuples
 
 testNamedTuple = (x = 5, y = 9, z = "z")
 jstring = JSON.json(testNamedTuple)

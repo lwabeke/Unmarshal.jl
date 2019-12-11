@@ -137,7 +137,7 @@ end
 
 function unmarshal(::Type{NamedTuple{NS, TS}}, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) where {NS, TS}
     if verbose
-        prettyPrint(verboseLvl, "$T NamedTuple ")
+        prettyPrint(verboseLvl, "NamedTuple{$NS,$TS}")
         verboseLvl += 1
     end
 
