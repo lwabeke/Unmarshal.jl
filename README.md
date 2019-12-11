@@ -3,7 +3,7 @@
 
 [![Build Status](https://travis-ci.org/lwabeke/Unmarshal.jl.svg?branch=master)](https://travis-ci.org/lwabeke/Unmarshal.jl)
 
-[![Coverage Status](https://coveralls.io/repos/lwabeke/Unmarshal.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/lwabeke/Unmarshal.jl?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/lwabeke/Unmarshal.jl/badge.svg)](https://coveralls.io/github/lwabeke/Unmarshal.jl)
 
 [![codecov.io](http://codecov.io/github/lwabeke/Unmarshal.jl/coverage.svg?branch=master)](http://codecov.io/github/lwabeke/Unmarshal.jl?branch=master)
 
