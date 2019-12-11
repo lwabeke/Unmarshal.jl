@@ -54,9 +54,9 @@ end
 
 #Test for structures of handling 1-D arrays
 mutable struct StructOfArrays
-        a1 :: Array{Float32, 1}
-        a2 :: Array{Int, 1}
-    end
+    a1 :: Array{Float32, 1}
+    a2 :: Array{Int, 1}
+end
 
 function ==(A :: StructOfArrays, B :: StructOfArrays)
     A.a1 == B.a1 && A.a2 == B.a2
@@ -68,9 +68,9 @@ jstring = JSON.json(tmp)
 
 #Test for handling 2-D arrays
 mutable struct StructOfArrays2D
-        a3 :: Array{Float64, 2}
-        a4 :: Array{Int, 2}
-    end
+    a3 :: Array{Float64, 2}
+    a4 :: Array{Int, 2}
+end
 
 function ==(A :: StructOfArrays2D, B :: StructOfArrays2D)
     A.a3 == B.a3 && A.a4 == B.a4
@@ -142,17 +142,49 @@ jstring = JSON.json(tmp3)
 
 @test_throws ArgumentError unmarshal(Nullable{Int64}, ones(Float64, 1))
 
+# Test handling of Any
+@test Unmarshal.unmarshal(Any, [1, 2]) == [1, 2]
+
 # Test handling of Tuples
 testTuples = ((1.0, 2.0, 3.0, 4.0), (2.0, 3.0))
 jstring = JSON.json(testTuples)
-@test Unmarshal.unmarshal(Tuple{Tuple{Float64}}, JSON.parse(jstring)) == testTuples
-@test Unmarshal.unmarshal(Tuple{Array{Float64}}, JSON.parse(jstring)) == (([testElement...] for testElement in testTuples)...,)
-@test Unmarshal.unmarshal(Array{Tuple{Float64}}, JSON.parse(jstring)) == [testTuples...]
+jparsed = JSON.parse(jstring)
+# Tuple of Arrays
+tupleResult = (([testElement...] for testElement in testTuples)...,)
+for typ in (Tuple, Tuple{Vararg{Array}}, Tuple{Array, Array})
+    @test Unmarshal.unmarshal(typ, jparsed) == tupleResult
+end
+# Tuple of Tuples
+for typ in (Tuple{Vararg{Tuple}}, Tuple{Vararg{Tuple{Vararg{Float64}}}})
+    @test Unmarshal.unmarshal(typ, jparsed) == testTuples
+end
+# Array of Arrays
 @test Unmarshal.unmarshal(Array{Array{Float64}}, JSON.parse(jstring)) == [([testElement...] for testElement in testTuples)...]
-@test Unmarshal.unmarshal(Tuple{Tuple{Float64}}, JSON.parse(jstring), true) == testTuples
+
+struct TupleTest
+    a::Tuple
+    b::Tuple{Int64, Float64}
+    c::Tuple{Float64, Vararg{Int64}}
+    d::NamedTuple{(:x, :y)}
+    e::NamedTuple{(:x, :y), Tuple{Int64, Float64}}
+end
+testTuples = TupleTest(
+    ("a", 1, 5),
+    (5, 3.5),
+    (1.2, 6, 7, 3),
+    (x = 5, y = 9),
+    (x = 3, y = 1.4),
+)
+jstring = JSON.json(testTuples)
+@test Unmarshal.unmarshal(TupleTest, JSON.parse(jstring)) == testTuples
+
+testNamedTuple = (x = 5, y = 9, z = "z")
+jstring = JSON.json(testNamedTuple)
+resultNamedTuple = Unmarshal.unmarshal(NamedTuple, JSON.parse(jstring))
+@test all(getfield(testNamedTuple, key) == getfield(resultNamedTuple, key) for key in keys(testNamedTuple))
 
 mutable struct DictTest
-testDict::Dict{Int, String}
+    testDict::Dict{Int, String}
 end
 
 function ==(D1 :: DictTest, D2 :: DictTest)
@@ -181,9 +213,9 @@ dictTest = DictTest(Dict{Int, String}(1 => "Test1", 2 => "Test2"))
 @test Unmarshal.unmarshal(typeof(dictTest2), JSON.parse(JSON.json(dictTest2)), true) == dictTest2
 
 mutable struct TestUnmarshal
-  a::String
-  b::String
-  links::Dict{String, String}
+    a::String
+    b::String
+    links::Dict{String, String}
 end
 
 function ==(T1 :: TestUnmarshal, T2 :: TestUnmarshal)
