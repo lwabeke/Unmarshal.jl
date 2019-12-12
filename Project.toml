@@ -1,5 +1,5 @@
 name = "Unmarshal"
-uuid = "ac826960-1556-11ea-1175-3f8dc11cd404"
+uuid = "cbff2730-442d-58d7-89d1-8e530c41eb02"
 authors = ["Leon Wabeke <leonwabeke@gmail.com>", "Sunoru <s@sunoru.com>"]
 version = "0.3.1"
 
