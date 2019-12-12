@@ -1,7 +1,7 @@
 name = "Unmarshal"
 uuid = "ac826960-1556-11ea-1175-3f8dc11cd404"
 authors = ["Leon Wabeke <leonwabeke@gmail.com>", "Sunoru <s@sunoru.com>"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
