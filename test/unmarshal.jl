@@ -234,4 +234,28 @@ j = JSON.parse(raw)
 t = TestUnmarshal("", "Test", Dict("self"=>"TestDict"))
 @test Unmarshal.unmarshal(TestUnmarshal, JSON.parse(JSON.json(t))) == t
 
+println("Starting tests on Pairs")
+#Tests for pairs
+p = ("3" => "7")
+#@show p
+@test Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true) == p
+
+p = (32 => 72)
+#@show p
+@test Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true) == p
+
+
+p = ("33" => 73)
+#@show p
+@test Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true) == p
+
+p = (34 => "74")
+#@show p
+@test Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true) == p
+
+p = (34 => ones(10))
+#@show p
+@test Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true) == p
+g=Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true)
+@show g
 
