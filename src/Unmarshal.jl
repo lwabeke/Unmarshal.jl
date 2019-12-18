@@ -119,6 +119,40 @@ function unmarshal(DT :: Type, parsedJson :: AbstractDict, verbose :: Bool = fal
     DT(tup...)
 end
 
+function unmarshal(DT :: Type{Pair{TF, TS}}, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) where {TF, TS}
+    if verbose
+          prettyPrint(verboseLvl, "Pair $(DT) AbstractDict")
+          verboseLvl += 1
+    end
+
+    if (length(keys(parsedJson)) > 1)
+          @warn "Expected a single pair, but found a multi-entry dictionary, just using the first key: $(collect(keys(parsedJson))[1])"
+    end
+    firstVal = (collect(keys(parsedJson))[1]) #, verbose, verboseLvl)
+    secondVal = (parsedJson[firstVal]) #, verbose, verboseLvl)
+#    @show firstVal, secondVal
+
+    if !isa(firstVal, TF)
+        try
+           firstVal = TF(firstVal)
+        catch ex
+           firstVal = unmarshal(TF, JSON.parse(firstVal), verbose, verboseLvl)
+        end
+    end
+
+    if !isa(secondVal, TS)
+        try
+           secondVal = TS(secondVal)
+        catch ex
+           throw(ArgumentError("Error trying to convert value $(secondVal) of type $(typeof(secondVal)) to a $(TS), please provide a conversion")) 
+        end
+    end 
+
+#    @show firstVal, secondVal
+
+    (firstVal => secondVal) 
+end
+
 function unmarshal(::Type{T}, parsedJson :: Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where {T <: Tuple}
     if verbose
         prettyPrint(verboseLvl, "$T")
