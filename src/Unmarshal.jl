@@ -144,7 +144,7 @@ function unmarshal(DT :: Type{Pair{TF, TS}}, parsedJson :: AbstractDict, verbose
         try
            secondVal = TS(secondVal)
         catch ex
-           secondVal = unmarshal(TS, JSON.parse(secondVal), verbose, verboseLvl)
+           throw(ArgumentError("Error trying to convert value $(secondVal) of type $(typeof(secondVal)) to a $(TS), please provide a conversion")) 
         end
     end 
 

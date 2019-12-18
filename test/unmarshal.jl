@@ -261,3 +261,8 @@ raw = "{\"2\":\"Test2\",\"1\":\"Test1\"}"
 p = ("34" => "74")
 @show Unmarshal.unmarshal(typeof(p), JSON.parse((raw)))
 
+# Testing pair, where second is complex structure
+p = ( 24 => Dict("hours"=>24, "min"=>60) )
+q = ( 24 => "Test" )
+@test Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true) == p
+@test_throws ArgumentError Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(q)), true) 
