@@ -126,7 +126,7 @@ function unmarshal(DT :: Type{Pair{TF, TS}}, parsedJson :: AbstractDict, verbose
     end
 
     if (length(keys(parsedJson)) > 1)
-          warning("Expected a single pair, but found a multi-entry dictionary, just using the first key: $(parsedJson[collect(keys(parsedJson))[1]])")
+          @warn "Expected a single pair, but found a multi-entry dictionary, just using the first key: $(collect(keys(parsedJson))[1])"
     end
     firstVal = (collect(keys(parsedJson))[1]) #, verbose, verboseLvl)
     secondVal = (parsedJson[firstVal]) #, verbose, verboseLvl)

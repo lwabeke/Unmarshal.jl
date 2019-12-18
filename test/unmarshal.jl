@@ -256,6 +256,8 @@ p = (34 => "74")
 p = (34 => ones(10))
 #@show p
 @test Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true) == p
-g=Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true)
-@show g
+
+raw = "{\"2\":\"Test2\",\"1\":\"Test1\"}"
+p = ("34" => "74")
+@show Unmarshal.unmarshal(typeof(p), JSON.parse((raw)))
 
