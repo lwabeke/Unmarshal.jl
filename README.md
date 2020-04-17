@@ -40,11 +40,21 @@ Unmarshal.unmarshal(Array{Float64}, JSON.parse(jstring))
 # [ 1.0 ; 1.0 ; 1.0 ]
 ```
 
+```julia
+using LazyJSON
+
+#"[1.0,1.0,1.0]"
+
+Unmarshal.unmarshal(Array{Float64}, JSON.parse(jstring))
+#3-element Array{Float64,1}:
+# [ 1.0 ; 1.0 ; 1.0 ]
+```
+
 ## Documentation
 
 ```julia
 Unmarshal.unmarshal(MyType, parseOutput, verbose = false )
 ```
-Builds on object of type :MyType from the dictionary produced by JSON.parse. Set verbose to true to get debug information about the type hierarchy beging unmarshalled. This might be useful in tracking down mismatches between the JSON object and the Julia type definition.
+Builds on object of type :MyType from the dictionary produced by JSON.parse or now also LazyJSON.parse. Set verbose to true to get debug information about the type hierarchy beging unmarshalled. This might be useful in tracking down mismatches between the JSON object and the Julia type definition.
 
 

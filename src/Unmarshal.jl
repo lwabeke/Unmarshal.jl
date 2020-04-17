@@ -14,20 +14,25 @@ end
 
 export unmarshal # returns a reconstructed variable from a JSON parsed string
 
+using Requires
+
 using JSON
 import Missings: Missing, missing
 import Nullables: Nullable
 
+function __init__()
+    @require LazyJSON="fc18253b-5e1b-504c-a4a2-9ece4944c004" include("lazyjson.jl")
+end
 
 unmarshal(::Type{Any}, x::String, verbose :: Bool = false, verboseLvl :: Int = 0) = x
 unmarshal(::Type{Any}, x, verbose :: Bool = false, verboseLvl :: Int = 0) = x
-function unmarshal(::Type{Any}, xs::Vector{E}, verbose :: Bool = false, verboseLvl :: Int = 0) where E
+function unmarshal(::Type{Any}, xs::Union{Vector{E}, AbstractArray}, verbose :: Bool = false, verboseLvl :: Int = 0) where E
     if verbose
-        prettyPrint(verboseLvl, "Vector{$E}")
+        prettyPrint(verboseLvl, "Any{$(eltype(xs))}")
         prettyPrint(verboseLvl, "List")
         verboseLvl += 1
     end
-    [(unmarshal(E, x, verbose, verboseLvl) for x in xs)...]
+    [(unmarshal(eltype(xs), x, verbose, verboseLvl) for x in xs)...]
 end
 
 function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0)
@@ -38,7 +43,7 @@ function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, ve
     DT(parsedJson)
 end
 
-function unmarshal(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E
+function unmarshal(::Type{Vector{E}}, parsedJson::Union{Vector, AbstractArray}, verbose :: Bool = false, verboseLvl :: Int = 0) where E
     if verbose
         prettyPrint(verboseLvl, "Vector{$E}")
         verboseLvl += 1
@@ -47,9 +52,9 @@ function unmarshal(::Type{Vector{E}}, parsedJson::Vector, verbose :: Bool = fals
     [(unmarshal(E, field, verbose, verboseLvl) for field in parsedJson)...]
 end
 
-unmarshal(::Type{Array{E}}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where E = unmarshal(Vector{E}, xs, verbose, verboseLvl)
+unmarshal(::Type{Array{E}}, xs::Union{Vector, AbstractArray}, verbose :: Bool = false, verboseLvl :: Int = 0) where E = unmarshal(Vector{E}, xs, verbose, verboseLvl)
 
-function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where {E, N}
+function unmarshal(::Type{Array{E, N}}, parsedJson::Union{Vector, AbstractArray}, verbose :: Bool = false, verboseLvl :: Int = 0) where {E, N}
     if verbose
         prettyPrint(verboseLvl, "Array{$E, $N}")
         verboseLvl += 1
@@ -58,14 +63,14 @@ function unmarshal(::Type{Array{E, N}}, parsedJson::Vector, verbose :: Bool = fa
     cat((unmarshal(Array{E,N-1}, x, verbose, verboseLvl) for x in parsedJson)..., dims=N)
 end
 
-unmarshal(::Type{Array{E, N} where E}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where N = unmarshal(Array{Any, N}, xs, verbose, verboseLvl)
-unmarshal(::Type{Array}, xs::Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where N = unmarshal(Vector{Any}, xs, verbose, verboseLvl)
+unmarshal(::Type{Array{E, N} where E}, xs::Union{Vector, AbstractArray}, verbose :: Bool = false, verboseLvl :: Int = 0) where N = unmarshal(Array{Any, N}, xs, verbose, verboseLvl)
+unmarshal(::Type{Array}, xs::Union{Vector,AbstractArray}, verbose :: Bool = false, verboseLvl :: Int = 0) where N = unmarshal(Vector{Any}, xs, verbose, verboseLvl)
 
 
 """
     unmarshal(T, dict[, verbose[, verboselvl]])
 
-Reconstructs an object of Type T using the dictionary output of a `JSON.parse.`
+Reconstructs an object of Type T using the dictionary output of a `JSON.parse` or now 'LazyJSON.parse`.
 
 Set verbose `true` to get debug information about how the data hierarchy is unmarshalled. This might be useful to track down parsing errors and/or mismatches between the JSON object and the Type definition.
 
@@ -77,6 +82,15 @@ julia> using JSON
 julia> var = randn(Float64, 5);  # Should work for most other variations of types you can think of
 
 julia> unmarshal(typeof(var), JSON.parse(JSON.json(var)) ) == var
+true
+ 
+or 
+
+julia> using LazyJSON
+
+julia> var = randn(Float64, 5);  # Should work for most other variations of types you can think of
+
+julia> unmarshal(typeof(var), LazyJSON.parse(JSON.json(var)) ) == var
 true
 ```
 
@@ -153,13 +167,19 @@ function unmarshal(DT :: Type{Pair{TF, TS}}, parsedJson :: AbstractDict, verbose
     (firstVal => secondVal) 
 end
 
-function unmarshal(::Type{T}, parsedJson :: Vector, verbose :: Bool = false, verboseLvl :: Int = 0) where {T <: Tuple}
+function unmarshal(::Type{T}, parsedJson :: Union{Vector, AbstractArray}, verbose :: Bool = true, verboseLvl :: Int = 0) where {T <: Tuple}
     if verbose
-        prettyPrint(verboseLvl, "$T")
+        prettyPrint(verboseLvl, "Tuple: $T")
         verboseLvl += 1
     end
-
-    ((unmarshal(fieldtype(T, i), field, verbose, verboseLvl) for (i, field) in enumerate(parsedJson))...,)
+    len = length(parsedJson) # fallback value
+    try
+        # If we have concrete lengths, rather use data type and ignore length of JSON
+        len = fieldcount(T)
+    catch ex
+        # If we do not have concrete lengths, use length of JSON
+    end
+    ((unmarshal(fieldtype(T, i), parsedJson[i], verbose, verboseLvl) for i in 1:len)...,)
 end
 
 function _unmarshal(::Type{T}, key :: Symbol, parsedJson :: AbstractDict, verbose :: Bool = false, verboseLvl :: Int = 0) where T
@@ -189,7 +209,7 @@ function unmarshal(DT :: Type{T}, parsedJson :: AbstractDict, verbose :: Bool = 
     val = DT()
     for iter in keys(parsedJson)
         if verbose
-           prettyPrint(verboseLvl - 1, "\\--> $(iter) ")
+           prettyPrint(verboseLvl - 1, "\\--> $(iter) $(valtype(DT))")
         end
         tmp = unmarshal(valtype(DT), parsedJson[iter], verbose, verboseLvl) 
         if keytype(DT) <: AbstractString
