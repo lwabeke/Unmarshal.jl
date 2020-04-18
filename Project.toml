@@ -5,21 +5,22 @@ version = "0.3.2"
 
 [deps]
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+LazyJSON = "fc18253b-5e1b-504c-a4a2-9ece4944c004"
 Missings = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
 Nullables = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
-LazyJSON = "fc18253b-5e1b-504c-a4a2-9ece4944c004"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 
 [compat]
-julia = "1"
 JSON = "0.21.0"
 Missings = "0.4.3"
 Nullables = "1.0.0"
+Requires = "1.0"
+julia = "1"
 
 [extras]
+LazyJSON = "fc18253b-5e1b-504c-a4a2-9ece4944c004"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-LazyJSON = "fc18253b-5e1b-504c-a4a2-9ece4944c004"
 
 [targets]
 test = ["LinearAlgebra", "Test"]
