@@ -12,6 +12,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 
 [compat]
 JSON = "0.21.0"
+LazyJSON = "0.2"
 Missings = "0.4.3"
 Nullables = "1.0.0"
 Requires = "1.0"
