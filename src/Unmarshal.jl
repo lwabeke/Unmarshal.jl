@@ -35,12 +35,12 @@ function unmarshal(::Type{Any}, xs::Union{Vector{E}, AbstractArray}, verbose :: 
     [(unmarshal(eltype(xs), x, verbose, verboseLvl) for x in xs)...]
 end
 
-function unmarshal(DT :: Type, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0)
+function unmarshal(DT :: Type{String}, parsedJson :: String, verbose :: Bool = false, verboseLvl :: Int = 0)
     if verbose
         prettyPrint(verboseLvl, "$(DT) (String)")
         verboseLvl += 1
     end
-    DT(parsedJson)
+    parsedJson
 end
 
 function unmarshal(::Type{Vector{E}}, parsedJson::Union{Vector, AbstractArray}, verbose :: Bool = false, verboseLvl :: Int = 0) where E

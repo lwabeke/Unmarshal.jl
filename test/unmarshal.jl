@@ -51,6 +51,24 @@ end
 @test Unmarshal.unmarshal(Qux, JSON.parse(input)) === Qux(Nothing(),Bar(17),3.14,Nothing())
 @test_throws ArgumentError Unmarshal.unmarshal(Bar, JSON.parse(input))
 
+# Test cases to cover https://github.com/lwabeke/Unmarshal.jl/issues/31
+input31 = "{ \"id\": 25073877, \"id_str\": \"25073877\"}"
+
+struct UserX
+    id::Int64
+    id_str::String
+end
+
+@test Unmarshal.unmarshal(UserX, JSON.parse(input31)) == UserX(25073877, "25073877")
+
+struct UserY
+    id::Union{Int64, Nothing}
+    id_str::Union{String, Nothing}
+end
+
+@test Unmarshal.unmarshal(UserY, JSON.parse(input31)) == UserY(25073877, "25073877")
+
+
 #Test for handling of 1-D arrays
 @test Unmarshal.unmarshal(Array{Float64,1}, JSON.parse(JSON.json(ones(10))), true) == ones(10)
 
