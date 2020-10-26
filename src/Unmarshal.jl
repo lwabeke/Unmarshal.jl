@@ -234,7 +234,12 @@ unmarshal(::Type{Union{T,Missing}}, x, verbose :: Bool = false, verboseLvl :: In
 unmarshal(::Type{Union{T,Nothing}}, x::Nothing, verbose :: Bool = false, verboseLvl :: Int = 0) where T = nothing
 unmarshal(::Type{Union{T,Nothing}}, x::T, verbose :: Bool = false, verboseLvl :: Int = 0) where T = unmarshal(T, x, verbose, verboseLvl)
 
-unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) =
-    throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
+function unmarshal(T::Type, x, verbose :: Bool = false, verboseLvl :: Int = 0) 
+    try
+        T(x)
+    catch
+        throw(ArgumentError("no unmarshal function defined to convert $(typeof(x)) to $(T); consider providing a specialization"))
+    end
+end
 
 end # module
