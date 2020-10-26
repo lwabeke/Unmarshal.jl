@@ -310,11 +310,11 @@ struct Tweet
 end
 
 json_str = "{\"id_str\":\"1305501948074835974\",\"created_at\":\"Mon Sep 14 13:41:34 +0000 2020\",\"place\":null,\"id\":1305501948074835974,\"user\":{\"name\":\"Donald J. Trump\",\"id_str\":\"25073877\",\"created_at\":\"Wed Mar 18 13:46:38 +0000 2009\",\"id\":25073877}}"
-Unmarshal.unmarshal(Tweet, JSON.parse(json_str), true)
+@test isa(Unmarshal.unmarshal(Tweet, JSON.parse(json_str), true),Tweet)
 
 mutable struct TestStruct
     test::Symbol
 end
 packedDict = Dict{String,Any}("test" => "testValue")
-packedVND = Unmarshal.unmarshal(TestStruct, packedDict)
+@test isa(Unmarshal.unmarshal(TestStruct, packedDict), TestStruct)
 
