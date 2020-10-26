@@ -282,3 +282,39 @@ p = ( 24 => Dict("hours"=>24, "min"=>60) )
 q = ( 24 => "Test" )
 @test Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(p)), true) == p
 @test_throws ArgumentError Unmarshal.unmarshal(typeof(p), JSON.parse(JSON.json(q)), true) 
+
+struct User
+    id::Union{Int64, Nothing}
+    id_str::Union{String, Nothing}
+    created_at::Union{String, Nothing}
+    name::Union{String, Nothing}
+    screen_name::Union{String, Nothing}
+    location::Union{String, Nothing}
+    statuses_count::Union{Int64, Nothing}
+    followers_count::Union{Int64, Nothing}
+    description::Union{String, Nothing}
+    profile_image_url::Union{String, Nothing}
+end
+
+struct Tweet
+    id::Union{Int64, Nothing}
+    id_str::Union{String, Nothing}
+    created_at::Union{String, Nothing}
+    favorite_count::Union{Int, Nothing}
+    retweet_count::Union{Int, Nothing}
+    full_text::Union{String, Nothing}
+    lang::Union{String, Nothing}
+    place::Union{String, Nothing}
+    truncated::Union{Bool, Nothing}
+    user::User
+end
+
+json_str = "{\"id_str\":\"1305501948074835974\",\"created_at\":\"Mon Sep 14 13:41:34 +0000 2020\",\"place\":null,\"id\":1305501948074835974,\"user\":{\"name\":\"Donald J. Trump\",\"id_str\":\"25073877\",\"created_at\":\"Wed Mar 18 13:46:38 +0000 2009\",\"id\":25073877}}"
+@test isa(Unmarshal.unmarshal(Tweet, JSON.parse(json_str), true),Tweet)
+
+mutable struct TestStruct
+    test::Symbol
+end
+packedDict = Dict{String,Any}("test" => "testValue")
+@test isa(Unmarshal.unmarshal(TestStruct, packedDict), TestStruct)
+

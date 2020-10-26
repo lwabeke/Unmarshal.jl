@@ -58,3 +58,9 @@ function unmarshal(DT :: Type{Pair{TF, TS}}, parsedJson :: LazyJSON.Object, verb
 
     (firstVal => secondVal)
 end
+
+unmarshal(::Type{T}, x::Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Number = T(x)
+unmarshal(::Type{Union{T,Nothing}}, x::LazyJSON.Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Number = T(x)
+unmarshal(::Type{Nullable{T}}, x::LazyJSON.Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Number = Nullable(T(x))
+unmarshal(::Type{Union{T,Missing}}, x::LazyJSON.Number, verbose :: Bool = false, verboseLvl :: Int = 0) where T <: Number= T(x)
+
