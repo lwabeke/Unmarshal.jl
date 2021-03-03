@@ -112,7 +112,7 @@ function unmarshal(DT :: Type, parsedJson :: AbstractDict, verbose :: Bool = fal
            prettyPrint(verboseLvl-1, "\\--> $(iter) <: $(DTNext) ")
         end
 
-        if !haskey(parsedJson, string(iter)) || isnothing(parsedJson[string(iter)])
+        if !haskey(parsedJson, string(iter)) || parsedJson[string(iter)] === nothing
             # check whether DTNext is compatible with any scheme for missing values
             val = if DTNext <: Nullable
                 DTNext()
