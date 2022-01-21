@@ -55,6 +55,6 @@ Unmarshal.unmarshal(Array{Float64}, JSON.parse(jstring))
 ```julia
 Unmarshal.unmarshal(MyType, parseOutput, verbose = false )
 ```
-Builds on object of type :MyType from the dictionary produced by JSON.parse or now also LazyJSON.parse. Set verbose to true to get debug information about the type hierarchy beging unmarshalled. This might be useful in tracking down mismatches between the JSON object and the Julia type definition.
+Builds on object of type :MyType from the dictionary produced by JSON.parse or now also LazyJSON.parse. Set verbose to true to get debug information about the type hierarchy being unmarshalled. This might be useful in tracking down mismatches between the JSON object and the Julia type definition.
 
 
